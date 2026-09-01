@@ -132,26 +132,45 @@ satellite wallets are unaffected.
 
 ## 6. Caddy (TLS on :8443)
 
-Add a second site to the Caddyfile (alongside the existing satellite site on
-443). Caddy generates and renews the self-signed cert automatically:
-
-```
-https://192.168.22.95:8443 {
-    tls internal
-    reverse_proxy 127.0.0.1:8100
-}
-```
+Generate a self-signed cert for the bare IP (10 years) and hand it to Caddy
+explicitly. Do NOT use `tls internal` here: Caddy's internal issuer mints
+certs per site name, and a bare-IP/hostnameless site on a non-443 port fails
+every handshake with a TLS `internal error` alert.
 
 ```bash
-sudo systemctl reload caddy
+sudo mkdir -p /opt/qp-service/tls
+sudo openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
+  -keyout /opt/qp-service/tls/qp.key -out /opt/qp-service/tls/qp.crt \
+  -subj "/CN=192.168.22.95" \
+  -addext "subjectAltName=IP:192.168.22.95,IP:127.0.0.1,DNS:localhost"
+sudo chown -R caddy:caddy /opt/qp-service/tls
+sudo chmod 600 /opt/qp-service/tls/qp.key
+```
+
+Replace the Caddyfile with a single site (Caddy must serve only 8443 — do not
+let it take 80/443, which belong to the satellite side):
+
+```bash
+sudo tee /etc/caddy/Caddyfile > /dev/null <<'EOF'
+{
+    auto_https disable_redirects
+}
+
+:8443 {
+    tls /opt/qp-service/tls/qp.crt /opt/qp-service/tls/qp.key
+    reverse_proxy 127.0.0.1:8100
+}
+EOF
+sudo systemctl enable --now caddy
+sudo systemctl restart caddy
 curl -sk https://127.0.0.1:8443/health
 ```
 
-Optionally record the cert fingerprint for the uploader to pin:
+Record the cert fingerprint for the uploader to pin (`curl -k` skips
+verification, so the fingerprint is the MITM mitigation):
 
 ```bash
-openssl s_client -connect 192.168.22.95:8443 </dev/null 2>/dev/null \
-  | openssl x509 -fingerprint -sha256 -noout
+openssl x509 -in /opt/qp-service/tls/qp.crt -noout -fingerprint -sha256
 ```
 
 ## 7. Router / firewall
