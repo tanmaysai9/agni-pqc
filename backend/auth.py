@@ -8,7 +8,7 @@ import jwt
 from config import JWT_SECRET, SUPPORTED_SCHEMES
 
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRY_HOURS = 24
+JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "24"))
 
 MOCK_WALLETS = {
     "0xA1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2": {
@@ -22,6 +22,12 @@ MOCK_WALLETS = {
     "0xE5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6": {
         "name": "Operator Gamma",
         "color": "#F59E0B",
+    },
+    # Dedicated wallet for the external uploader on the standalone qp-service.
+    # Append-only: tests index MOCK_WALLETS positionally, never reorder.
+    "0x9A8B7C6D5E4F9A8B7C6D5E4F9A8B7C6D5E4F9A8B": {
+        "name": "External Uploader",
+        "color": "#EF4444",
     },
 }
 

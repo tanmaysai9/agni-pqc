@@ -4,6 +4,7 @@ dist/
 venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Runtime data (keep dir structure, exclude contents)
 data/manifests.json

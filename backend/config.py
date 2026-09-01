@@ -34,4 +34,16 @@ NODE_IPS = {
 NODE_DAEMON_PORT = int(os.getenv("NODE_DAEMON_PORT", "5001"))
 NODE_GATEWAY_PORT = int(os.getenv("NODE_GATEWAY_PORT", "8080"))
 
-SUPPORTED_SCHEMES = {"DMAYA": True}
+QP_MAX_FILE_SIZE_MB = int(os.getenv("QP_MAX_FILE_SIZE_MB", "50"))
+QP_ALLOWED_EXTENSIONS = {
+    e.strip().lower()
+    for e in os.getenv("QP_ALLOWED_EXTENSIONS", "pdf,doc,docx,png,jpg,jpeg").split(",")
+    if e.strip()
+}
+
+# Standalone qp-service: when "0", POST /api/auth/mock-wallet returns 404 so
+# tokens can only be minted offline via mint_token.py (prod hardening; the
+# repo's wallet addresses are public).
+ENABLE_MOCK_WALLET = os.getenv("ENABLE_MOCK_WALLET", "1") == "1"
+
+SUPPORTED_SCHEMES = {"DMAYA": True, "SSS": True}

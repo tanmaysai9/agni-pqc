@@ -27,6 +27,7 @@ from store import (
 from pipelines.upload import run_upload, get_upload_status
 from pipelines.reconstruct import reconstruct_by_id
 from satellite.routes import router as satellite_router
+from question_papers import router as question_papers_router
 
 app = FastAPI(title="Secure Distributed Storage of Satellite Imagery", version="0.1.0")
 
@@ -39,6 +40,7 @@ app.add_middleware(
 )
 
 app.include_router(satellite_router)
+app.include_router(question_papers_router)
 
 
 async def _get_address(request: Request) -> str:
